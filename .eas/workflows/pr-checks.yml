@@ -1,0 +1,65 @@
+# The gates, on every PR into a long-lived branch.
+#
+# These are the same checks lefthook runs pre-commit — and the repetition is
+# the point. The hook checks the WORKING TREE, so it is green on a commit that
+# is already broken (a staged file importing an unstaged sibling). This is the
+# first place the checks run against the commit itself.
+#
+# `pnpm test` is not just jest: package.json chains the deprecated-API scan and
+# the icon check ahead of it.
+#
+# This file does NOT run `pnpm check:release`. A fresh clone with placeholder
+# identifiers must stay green here; the release workflows run that check as
+# their first job instead, before any build minutes are spent.
+#
+# Cost: custom jobs bill Linux minutes after the free tier. If that matters,
+# move these steps to another CI and keep EAS Workflows for build/submit/update.
+name: PR checks
+
+on:
+  pull_request:
+    branches: ['dev', 'preview', 'main']
+
+concurrency:
+  cancel_in_progress: true
+  # Custom groups are not supported yet; this is the documented placeholder.
+  group: ${{ workflow.filename }}-${{ github.ref }}
+
+defaults:
+  image: sdk-57
+  tools:
+    # Honour `packageManager` in package.json instead of the image's pnpm.
+    corepack: true
+
+jobs:
+  gates:
+    name: typecheck · lint · test · contrast · commit scope
+    runs_on: linux-medium
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: typecheck
+        run: pnpm typecheck
+      - name: lint
+        run: pnpm lint
+      - name: test
+        run: pnpm test
+      - name: contrast
+        run: pnpm theme:contrast
+      # Answers a question the other four cannot: is each commit in this PR
+      # self-contained? A commit importing a file it does not itself add builds
+      # fine in the working tree and breaks for whoever checks it out.
+      #
+      # THE FETCH IS NOT OPTIONAL. EAS checks out a SHALLOW clone of the head
+      # ref alone, so `origin/<base>` does not exist and the range resolves to
+      # nothing (`fatal: ambiguous argument`). Unshallow first: the merge base
+      # of a long-lived branch can be hundreds of commits back, and a fixed
+      # --depth is a guess that breaks silently once the branch outgrows it.
+      - name: commit scope
+        run: |
+          BASE="${{ github.event.pull_request.base.ref }}"
+          if [ "$(git rev-parse --is-shallow-repository)" = "true" ]; then
+            git fetch --no-tags --quiet --unshallow origin || git fetch --no-tags --quiet origin
+          fi
+          git fetch --no-tags --quiet origin "+refs/heads/$BASE:refs/remotes/origin/$BASE"
+          node scripts/check-commit-scope.mjs "origin/$BASE..HEAD"

@@ -1,0 +1,15 @@
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      run: pnpm typecheck
+    lint:
+      glob: '*.{js,ts,tsx}'
+      run: pnpm eslint {staged_files}
+    contrast:
+      glob: 'src/theme/**/*.ts'
+      run: pnpm theme:contrast
+    # Runtime-only breakage that typecheck and lint cannot see.
+    deprecated:
+      glob: 'src/**/*.{ts,tsx}'
+      run: pnpm check:deprecated

@@ -1,0 +1,133 @@
+# Production release, on every merge into `main`.
+#
+# Same shape as preview.yml — fingerprint-gated, so a JS-only merge is an OTA
+# update and a native change is a build — with one difference: NOTHING REACHES
+# USERS WITHOUT A PERSON APPROVING IT. Builds start immediately (they cost
+# minutes, not users); the store submissions and the production update wait
+# on the `require-approval` job, which a project member approves or rejects
+# on the EAS dashboard.
+#
+# What it deliberately does NOT do:
+#
+#   iOS      the build is uploaded to App Store Connect and STOPS THERE as a
+#            processed version. Apple offers no API to put a build into review,
+#            so the last step is always a human pressing "Submit for Review".
+#   Android  the app-bundle lands on the INTERNAL track as a DRAFT. Promoting
+#            it to production is a click in Play Console, once the listing,
+#            content rating and pricing are complete. Change the submit
+#            profile to `track: production` when a merge to `main` should go
+#            straight to the production track — still as a draft.
+#
+# Both jobs read the `production` EAS environment. It must carry
+# EXPO_PUBLIC_API_URL: src/lib/env validates it at MODULE LOAD, so a build
+# without it is not a degraded app, it is a launch crash — and a production
+# build is the one place nobody sees that before the users do.
+name: Production release
+
+on:
+  push:
+    branches: ['main']
+
+concurrency:
+  cancel_in_progress: true
+  group: ${{ workflow.filename }}-${{ github.ref }}
+
+defaults:
+  image: sdk-57
+  tools:
+    corepack: true
+
+jobs:
+  release_config:
+    name: Release config is filled in
+    runs_on: linux-medium
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: check
+        run: pnpm check:release
+
+  fingerprint:
+    name: Fingerprint
+    needs: [release_config]
+    type: fingerprint
+    environment: production
+
+  get_ios_build:
+    name: Existing iOS production build?
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: ios
+      profile: production
+      fingerprint_hash: ${{ needs.fingerprint.outputs.ios_fingerprint_hash }}
+      wait_for_in_progress: true
+
+  get_android_build:
+    name: Existing Android production build?
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: android
+      profile: production
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+      wait_for_in_progress: true
+
+  build_ios:
+    name: iOS build
+    needs: [get_ios_build]
+    if: ${{ needs.get_ios_build.outputs.build_id == '' }}
+    type: build
+    params:
+      platform: ios
+      profile: production
+
+  build_android:
+    name: Android app-bundle
+    needs: [get_android_build]
+    if: ${{ needs.get_android_build.outputs.build_id == '' }}
+    type: build
+    params:
+      platform: android
+      profile: production
+
+  approve_release:
+    name: Approve store upload / production update
+    needs: [get_ios_build, get_android_build]
+    type: require-approval
+
+  submit_ios:
+    name: Upload to App Store Connect
+    needs: [build_ios, approve_release]
+    type: submit
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      profile: production
+
+  submit_android:
+    name: Upload to Play (internal, draft)
+    needs: [build_android, approve_release]
+    type: submit
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      profile: production
+
+  update_ios:
+    name: OTA update (iOS, production)
+    needs: [get_ios_build, approve_release]
+    if: ${{ needs.get_ios_build.outputs.build_id != '' }}
+    type: update
+    environment: production
+    params:
+      channel: production
+      platform: ios
+
+  update_android:
+    name: OTA update (Android, production)
+    needs: [get_android_build, approve_release]
+    if: ${{ needs.get_android_build.outputs.build_id != '' }}
+    type: update
+    environment: production
+    params:
+      channel: production
+      platform: android

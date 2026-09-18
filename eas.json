@@ -1,0 +1,67 @@
+{
+  "cli": {
+    "version": ">= 22.0.0",
+    "appVersionSource": "remote",
+    "requireCommit": true
+  },
+  "build": {
+    "base": {
+      "corepack": true,
+      "ios": { "image": "sdk-57" },
+      "android": { "image": "sdk-57" }
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "environment": "development",
+      "ios": { "simulator": true },
+      "android": { "buildType": "apk" }
+    },
+    "development-device": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "environment": "development",
+      "ios": { "simulator": false },
+      "android": { "buildType": "apk" }
+    },
+    "preview": {
+      "extends": "base",
+      "channel": "preview",
+      "environment": "preview",
+      "autoIncrement": true,
+      "ios": { "distribution": "store" },
+      "android": { "distribution": "internal", "buildType": "apk" }
+    },
+    "production": {
+      "extends": "base",
+      "channel": "production",
+      "environment": "production",
+      "autoIncrement": true,
+      "distribution": "store",
+      "android": { "buildType": "app-bundle" }
+    }
+  },
+  "submit": {
+    "preview": {
+      "ios": {
+        "ascAppId": "<ASC_APP_ID>",
+        "appleTeamId": "<APPLE_TEAM_ID>",
+        "groups": ["<TESTFLIGHT_INTERNAL_GROUP>"]
+      }
+    },
+    "production": {
+      "ios": {
+        "ascAppId": "<ASC_APP_ID>",
+        "appleTeamId": "<APPLE_TEAM_ID>"
+      },
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}
