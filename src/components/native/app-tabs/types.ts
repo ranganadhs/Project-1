@@ -1,3 +1,4 @@
+import type { ImageSourcePropType } from 'react-native';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import type { AndroidSymbol } from 'expo-symbols';
 import type {
@@ -22,9 +23,27 @@ type Stateful<T> = T | { default: T; selected: T };
  */
 export type TabIcon =
   /** OS-drawn: SF Symbols on iOS, Material on Android. */
-  | { sf: Stateful<SFSymbol>; md: Stateful<AndroidSymbol>; ion?: never }
+  | { sf: Stateful<SFSymbol>; md: Stateful<AndroidSymbol>; ion?: never; image?: never }
   /** One Ionicons glyph on both platforms. */
-  | { ion: Stateful<IconName>; sf?: never; md?: never };
+  | { ion: Stateful<IconName>; sf?: never; md?: never; image?: never }
+  /**
+   * The product's OWN glyphs: bundled PNGs (@1x/@2x/@3x, 24pt, black on
+   * transparent) drawn as TEMPLATE images, so the bar tints them exactly like
+   * a symbol. Single-colour silhouettes only — template rendering flattens any
+   * second colour. Sources live in assets/tab-icons (SVG masters in docs).
+   */
+  | {
+      image: Stateful<ImageSourcePropType>;
+      /**
+       * `template` (default): a silhouette the bar tints. `original`: drawn as-is,
+       * for a mark whose colours ARE the identity (Medha) — then every state's
+       * colours are baked into the image and must be re-resolved per scheme.
+       */
+      renderingMode?: 'template' | 'original';
+      sf?: never;
+      md?: never;
+      ion?: never;
+    };
 
 export type TabConfig = {
   /**
@@ -72,6 +91,12 @@ export type AppTabsProps = {
 };
 
 export const isActionTab = (tab: TabConfig): boolean => tab.kind === 'action';
+
+/** Narrows to the bundled-image variant. */
+export const isImageTab = (
+  tab: TabConfig,
+): tab is TabConfig & { image: Stateful<ImageSourcePropType>; renderingMode?: 'template' | 'original' } =>
+  tab.image !== undefined;
 
 /** Narrows to the Ionicons variant. `sf`/`md` are `never` there, so this is safe. */
 export const isIonTab = (tab: TabConfig): tab is TabConfig & { ion: Stateful<IconName> } =>

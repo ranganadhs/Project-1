@@ -1,5 +1,11 @@
-import { useContext, type ReactNode } from 'react';
-import { ScrollView, View, type ScrollViewProps } from 'react-native';
+import { useContext, type ReactElement, type ReactNode } from 'react';
+import {
+  Platform,
+  ScrollView,
+  View,
+  type RefreshControlProps,
+  type ScrollViewProps,
+} from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StyleSheet, useUnistyles } from 'react-native-unistyles';
@@ -17,6 +23,13 @@ export type ScreenProps = {
    * most common broken-form complaint in React Native.
    */
   keyboardAware?: boolean;
+  /**
+   * With `keyboardAware`: how much room to keep BETWEEN THE CARET and the
+   * keyboard. The scroll view follows the caret, not the field — so a form
+   * whose action sits below a tall multiline field must reserve that much, or
+   * the Send button is left under the keyboard. Defaults to 24.
+   */
+  keyboardBottomOffset?: number;
   /** Adds horizontal padding. Turn off for edge-to-edge lists. */
   padded?: boolean;
   /**
@@ -34,6 +47,8 @@ export type ScreenProps = {
    */
   topInset?: boolean;
   contentContainerStyle?: ScrollViewProps['contentContainerStyle'];
+  /** Pull-to-refresh, from `useRefreshControl`. Scrolling screens only. */
+  refreshControl?: ReactElement<RefreshControlProps>;
 };
 
 /**
@@ -47,9 +62,11 @@ export function Screen({
   children,
   scroll = false,
   keyboardAware = false,
+  keyboardBottomOffset,
   padded = true,
   topInset = false,
   contentContainerStyle,
+  refreshControl,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useUnistyles();
@@ -64,54 +81,89 @@ export function Screen({
   // untouchable strip under the status bar, and `layout.screenTop` is the
   // breathing room below that. Collapsing them into one value would put content
   // flush against the notch on a device with a large inset.
-  //
-  // The SAME total in both the scrolling and non-scrolling branches, which
-  // matters more than it looks: a screen that toggles `scroll` between states
-  // would visibly jump its header at the moment it switched.
   const paddingTop = topInset ? insets.top + theme.layout.screenTop : undefined;
 
-  const contentStyle = [
+  /*
+    ── WHO APPLIES THE INSETS: iOS OR US, NEVER BOTH ──────────────────────────
+
+    The plain ScrollView runs with `contentInsetAdjustmentBehavior="automatic"`
+    so UIKit places the pull-to-refresh spinner below the status bar and knows
+    the real tab bar. That same setting makes iOS inset the CONTENT by the safe
+    area: status bar on top, and home indicator plus tab bar underneath.
+
+    Adding `insets.top` / `insets.bottom + tabBarClearance` on top of that pays
+    every gap twice. So on iOS the automatic branch adds only the breathing
+    room. Android has no automatic adjustment, so it keeps the manual insets.
+  */
+  const systemInsets = Platform.OS === 'ios';
+
+  const contentStyle = (auto: boolean) => [
     styles.content,
-    { paddingBottom: bottomInset + 24 },
-    topInset ? { paddingTop } : null,
+    { paddingBottom: (auto ? 0 : bottomInset) + theme.layout.screenBottom },
+    topInset && !auto ? { paddingTop } : null,
     contentContainerStyle,
   ];
 
+  /*
+    A header-less screen (the tabs) scrolls UNDER the status bar — the app is
+    edge-to-edge, and on Android nothing is drawn there, so a card slides
+    beneath the clock ("Settings" printed over the status icons). A canvas
+    strip the height of the inset keeps the clock on a clean surface instead,
+    sitting ABOVE the scrolling content and ignoring touches so pull-to-refresh
+    still starts from the very top.
+  */
+  const withStatusStrip = (view: ReactElement) =>
+    topInset ? (
+      <View style={styles.container}>
+        {view}
+        <View pointerEvents="none" style={[styles.statusStrip, { height: insets.top }]} />
+      </View>
+    ) : (
+      view
+    );
+
   if (keyboardAware) {
-    return (
+    return withStatusStrip(
       <KeyboardAwareScrollView
         style={styles.container}
-        contentContainerStyle={contentStyle}
+        contentContainerStyle={contentStyle(false)}
+        // Header-less (the tabs): we pay the top inset, so iOS must not. Under
+        // a native header, leave UIKit to clear it as before.
+        contentInsetAdjustmentBehavior={topInset ? 'never' : undefined}
         // Extra room below the focused field so the input is not flush against
         // the keyboard's top edge.
-        bottomOffset={24}
+        bottomOffset={keyboardBottomOffset ?? 24}
+        refreshControl={refreshControl}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
         showsVerticalScrollIndicator={false}
       >
         {children}
-      </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>,
     );
   }
 
   if (!scroll) {
-    return (
+    return withStatusStrip(
       <View style={[styles.container, styles.plain, { paddingTop, paddingBottom: bottomInset }]}>
         {children}
-      </View>
+      </View>,
     );
   }
 
-  return (
+  const scrollView = (
     <ScrollView
       style={styles.container}
-      contentContainerStyle={contentStyle}
+      contentContainerStyle={contentStyle(systemInsets)}
       contentInsetAdjustmentBehavior="automatic"
+      refreshControl={refreshControl}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {children}
     </ScrollView>
   );
+  return withStatusStrip(scrollView);
 }
 
 /*
@@ -124,6 +176,13 @@ export function Screen({
   same padding on the one View it renders.
 */
 const styles = StyleSheet.create((theme) => ({
+  statusStrip: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: theme.color.bg.canvas,
+  },
   container: {
     flex: 1,
     backgroundColor: theme.color.bg.canvas,

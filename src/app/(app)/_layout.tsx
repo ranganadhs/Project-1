@@ -3,14 +3,6 @@ import { Stack } from 'expo-router';
 import { useReducedMotion } from 'react-native-reanimated';
 import { useUnistyles } from 'react-native-unistyles';
 
-/**
- * Every navigation presentation the boilerplate demonstrates lives here, so the
- * platform differences are visible in one file.
- *
- * Presentations available from react-native-screens:
- *   push · modal · pageSheet · formSheet · fullScreenModal ·
- *   transparentModal · containedModal · containedTransparentModal
- */
 export default function AppLayout() {
   const { theme } = useUnistyles();
   /*
@@ -49,104 +41,41 @@ export default function AppLayout() {
         }}
       />
 
-      {/*
-        PUSH — the default. Slides in from the trailing edge on iOS with an
-        interactive back-swipe; on Android it fades/slides per the platform
-        animation and the hardware back button pops it.
-      */}
+      {/* PUSH — chat opens from the Learn tab's ask bar or a session row. */}
       <Stack.Screen
-        name="detail"
+        name="session/[id]/index"
         options={{
           headerShown: true,
-          title: 'Pushed screen',
+          title: 'Session',
+          headerBackButtonDisplayMode: 'minimal',
+        }}
+      />
+
+      {/* PUSH — quiz runner opens from a chat's quick-check prompt. */}
+      <Stack.Screen
+        name="session/[id]/quiz/[quizId]/index"
+        options={{
+          headerShown: true,
+          title: 'Quiz',
           headerBackButtonDisplayMode: 'minimal',
         }}
       />
 
       {/*
-        MODAL — iOS presents a card that stops short of the top and leaves the
-        parent visible behind it, dismissible by dragging down. Android has no
-        card-modal concept, so it presents as a full screen.
+        FULL SCREEN MODAL — results must be acknowledged (Review mistake /
+        Next topic) before returning to the chat, so it covers everything on
+        both platforms with no drag-to-dismiss.
       */}
       <Stack.Screen
-        name="modal"
-        options={{
-          presentation: 'modal',
-          headerShown: true,
-          title: 'Modal',
-        }}
-      />
-
-      {/*
-        FORM SHEET — the real native bottom sheet, no third-party library.
-        Detents are fractions of screen height. iOS accepts any number of them;
-        ANDROID IS CAPPED AT THREE and ignores the rest.
-        `sheetGrabberVisible` and `sheetCornerRadius` are iOS-only.
-      */}
-      <Stack.Screen
-        name="sheet"
-        options={{
-          presentation: 'formSheet',
-          headerShown: false,
-          sheetAllowedDetents: [0.35, 0.6, 0.95],
-          sheetInitialDetentIndex: 0,
-          sheetGrabberVisible: true,
-          sheetCornerRadius: theme.radius['3xl'],
-          sheetExpandsWhenScrolledToEdge: true,
-          // Leaves the first detent undimmed so the screen behind stays usable —
-          // the "peek" interaction Maps and Music use.
-          sheetLargestUndimmedDetentIndex: 0,
-        }}
-      />
-
-      {/*
-        FULL SCREEN MODAL — covers everything on both platforms, no drag to
-        dismiss. Use it for flows that must be completed or explicitly cancelled.
-      */}
-      <Stack.Screen
-        name="fullscreen"
+        name="session/[id]/quiz/[quizId]/results"
         options={{
           presentation: 'fullScreenModal',
-          headerShown: true,
-          title: 'Full screen',
-          // iOS has no back affordance here by default; the screen supplies its
-          // own Close button.
-          headerBackVisible: false,
+          headerShown: false,
           animation: reducedMotion
             ? 'fade'
             : Platform.OS === 'ios'
               ? 'slide_from_bottom'
               : 'fade_from_bottom',
-        }}
-      />
-
-      {/*
-        TRANSPARENT MODAL — the route renders over the previous screen with a
-        transparent background, so you draw your own scrim. This is how you build
-        custom dialogs, toasts, and spotlight overlays as real routes.
-
-        `contentStyle` MUST be re-declared transparent here, and it is the one
-        presentation that needs it. The native stack skips its own theme
-        background for `transparentModal` — and then appends whatever
-        `contentStyle` the options carry:
-
-          contentStyle: [
-            presentation !== 'transparentModal' && { backgroundColor: colors.background },
-            contentStyle,
-          ]
-
-        So the `bg.canvas` this Stack sets for every screen lands on the modal
-        too and fills it solid. The scrim then darkens that canvas instead of the
-        screen behind it, and the dialog reads as flat white in light and flat
-        black in dark — through a clean typecheck, lint and bundle.
-      */}
-      <Stack.Screen
-        name="dialog"
-        options={{
-          presentation: 'transparentModal',
-          headerShown: false,
-          animation: 'fade',
-          contentStyle: { backgroundColor: theme.color.bg.transparent },
         }}
       />
     </Stack>

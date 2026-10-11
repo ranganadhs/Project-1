@@ -13,6 +13,9 @@ export const size = {
   /** Small circular status dots and unread markers. */
   dot: { sm: 6, md: 8, lg: 10 },
 
+  /** The leading glyph square on a tile, row or card — see `shape.tile`. */
+  tile: { sm: 36, md: 44, lg: 52 },
+
   /** Badge/pill heights. */
   badge: { sm: 16, md: 20, lg: 24 },
 

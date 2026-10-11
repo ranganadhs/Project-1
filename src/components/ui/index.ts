@@ -31,3 +31,6 @@ export {
 } from './media';
 export { List, type ListProps } from './list';
 export { AreaChart, type AreaChartProps, type AreaChartPoint } from './area-chart';
+export { FadeIn, CountUp, type FadeInProps, type CountUpProps } from './motion';
+export { StepProgress, type StepProgressProps } from './step-progress';
+export { IconTile, type IconTileProps, type IconTileTone } from './icon-tile';

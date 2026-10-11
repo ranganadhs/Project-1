@@ -3,7 +3,7 @@ import '@/theme/unistyles';
 
 import type { ReactNode } from 'react';
 import { render } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { Platform, Text } from 'react-native';
 import { Screen } from './screen';
 import { TabBarClearanceContext } from './tab-bar-clearance';
 import { light } from '@/theme/themes/light';
@@ -42,7 +42,19 @@ const flatten = (style: unknown): Record<string, unknown> => {
 };
 
 /** The outermost element that carries padding — the scroller or the plain view. */
+/**
+ * A `topInset` scroll screen is wrapped (scroller + status-bar strip); the
+ * scroller is the first child. Everything else renders the scroller at root.
+ */
+function scroller(json: unknown): { props: Record<string, unknown> } {
+  const node = json as { props?: Record<string, unknown>; children?: { props?: Record<string, unknown> }[] };
+  const strip = node?.children?.[1];
+  const wrapped = node?.children?.length === 2 && strip?.props?.pointerEvents === 'none';
+  return (wrapped ? node.children![0] : node) as { props: Record<string, unknown> };
+}
+
 function paddingOf(json: unknown): Record<string, unknown> {
+  json = scroller(json);
   const node = json as { props?: Record<string, unknown> };
   const props = node?.props ?? {};
   return flatten(props.contentContainerStyle ?? props.style);
@@ -68,24 +80,65 @@ describe('Screen top inset', () => {
     // collapsing them puts content flush against the notch on a tall device.
     expect(paddingOf(toJSON()).paddingTop).toBe(INSETS.top + light.layout.screenTop);
   });
+});
 
-  /**
-   * The challenge here is not the arithmetic, it is that the two branches agree.
-   * A screen that toggles `scroll` between states would visibly jump its header
-   * the moment it switched if these differed.
-   */
-  it('pads the top identically whether or not the screen scrolls', async () => {
-    const plain = await render(
-      <Screen topInset>
+/**
+ * ── WHO APPLIES THE INSETS: iOS OR US, NEVER BOTH ──────────────────────────
+ *
+ * The scrolling branch runs with `contentInsetAdjustmentBehavior="automatic"`,
+ * which makes UIKit inset the content by the status bar, home indicator AND
+ * tab bar itself. Padding those again doubled every gap: 156pt of empty canvas
+ * between the last card and the tab bar, measured on device. On iOS the
+ * scroller carries only the breathing room; Android has no automatic
+ * adjustment and gets the insets from us.
+ */
+describe('Screen scrolling insets', () => {
+  const inTabs = (node: ReactNode) => (
+    <TabBarClearanceContext value={light.size.bar.tab}>{node}</TabBarClearanceContext>
+  );
+
+  afterEach(() => jest.restoreAllMocks());
+
+  it('leaves the system insets to iOS and adds only breathing room', async () => {
+    const { toJSON } = await render(
+      inTabs(
+        <Screen scroll topInset>
+          <Text>body</Text>
+        </Screen>,
+      ),
+    );
+    const json = scroller(toJSON());
+    expect(json.props.contentInsetAdjustmentBehavior).toBe('automatic');
+    const padding = paddingOf(json);
+    expect(padding.paddingTop).toBe(light.layout.screenTop);
+    expect(padding.paddingBottom).toBe(light.layout.screenBottom);
+  });
+
+  it('applies the insets itself on Android, where nothing adjusts them', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    const { toJSON } = await render(
+      inTabs(
+        <Screen scroll topInset>
+          <Text>body</Text>
+        </Screen>,
+      ),
+    );
+    const padding = paddingOf(toJSON());
+    expect(padding.paddingTop).toBe(INSETS.top + light.layout.screenTop);
+    expect(padding.paddingBottom).toBe(
+      INSETS.bottom + light.size.bar.tab + light.layout.screenBottom,
+    );
+  });
+
+  it('applies the insets itself when keyboard-aware, which does not auto-adjust', async () => {
+    const { toJSON } = await render(
+      <Screen keyboardAware topInset>
         <Text>body</Text>
       </Screen>,
     );
-    const scrolling = await render(
-      <Screen topInset scroll>
-        <Text>body</Text>
-      </Screen>,
-    );
-    expect(paddingOf(plain.toJSON()).paddingTop).toBe(paddingOf(scrolling.toJSON()).paddingTop);
+    const padding = paddingOf(toJSON());
+    expect(padding.paddingTop).toBe(INSETS.top + light.layout.screenTop);
+    expect(padding.paddingBottom).toBe(INSETS.bottom + light.layout.screenBottom);
   });
 });
 
@@ -121,3 +174,18 @@ describe('Screen bottom clearance', () => {
   screen, absent when `padded={false}` — is stated in screen.tsx and needs a
   device to confirm.
 */
+
+describe('Screen status-bar strip', () => {
+  it('puts a canvas strip the height of the top inset over a header-less scroll screen', async () => {
+    const { toJSON } = await render(
+      <Screen scroll topInset>
+        <Text>body</Text>
+      </Screen>,
+    );
+    const root = toJSON() as { children: { props: Record<string, unknown> }[] };
+    const strip = flatten(root.children[1]!.props.style);
+    expect(strip.height).toBe(INSETS.top);
+    expect(strip.position).toBe('absolute');
+    expect(root.children[1]!.props.pointerEvents).toBe('none');
+  });
+});

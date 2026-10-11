@@ -81,6 +81,8 @@ export const shape = {
   chip: corner(radius.full),
   /** Banners and inline notices — a surface, but flatter than a card. */
   notice: corner(radius.lg),
+  /** A leading glyph square inside a row or tile — sits one step inside `card`. */
+  tile: corner(radius.lg),
 } as const;
 
 export type ShapeKey = Exclude<keyof typeof shape, 'smooth'>;

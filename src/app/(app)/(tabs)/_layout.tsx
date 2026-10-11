@@ -6,21 +6,21 @@ import { AppTabs, type TabConfig } from '@/components/native/app-tabs';
 const TABS: TabConfig[] = [
   {
     name: 'index',
-    label: 'Components',
-    sf: { default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' },
-    md: 'grid_view',
-  },
-  {
-    name: 'patterns',
-    label: 'Navigation',
-    sf: { default: 'rectangle.stack', selected: 'rectangle.stack.fill' },
-    md: 'layers',
-  },
-  {
-    name: 'native',
-    label: 'Native',
-    sf: { default: 'wand.and.sparkles', selected: 'wand.and.sparkles.inverse' },
+    label: 'Learn',
+    sf: { default: 'sparkles', selected: 'sparkles' },
     md: 'auto_awesome',
+  },
+  {
+    name: 'sessions',
+    label: 'Sessions',
+    sf: { default: 'message', selected: 'message.fill' },
+    md: 'chat_bubble',
+  },
+  {
+    name: 'quizzes',
+    label: 'Quizzes',
+    sf: { default: 'questionmark.circle', selected: 'questionmark.circle.fill' },
+    md: 'quiz',
   },
   {
     name: 'settings',

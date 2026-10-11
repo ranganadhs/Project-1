@@ -11,7 +11,9 @@ import type { ImageSourcePropType } from 'react-native';
 // components/ui/tab-bar-clearance.ts.
 import type { IconName } from '@/components/ui';
 import { TabBarClearanceContext } from '@/components/ui/tab-bar-clearance';
-import { isActionTab, isIonTab, type AppTabsProps, type TabConfig } from './types';
+// A leaf that imports only react-native and the palette — safe in a route graph.
+import { nativeColor } from '@/theme/native-color';
+import { isActionTab, isImageTab, isIonTab, type AppTabsProps, type TabConfig } from './types';
 
 /**
  * Native tab bar on both platforms: a real UITabBarController on iOS (which
@@ -58,17 +60,31 @@ export function AppTabs({ tabs, minimizeBehavior }: AppTabsProps) {
           indicator rather than a button.
         */
         iconColor={{
-          default: theme.color.fg.tertiary,
+          default: nativeColor((c) => c.fg.tertiary, theme.color),
           selected:
             Platform.OS === 'android'
               ? theme.color.fg.onBrand
-              : theme.color.interactive.primary.rest,
+              : nativeColor((c) => c.interactive.primary.rest, theme.color),
         }}
-        labelStyle={{ color: theme.color.fg.tertiary }}
+        labelStyle={{ color: nativeColor((c) => c.fg.tertiary, theme.color) }}
         indicatorColor={theme.color.interactive.primary.rest}
+        /*
+          ANDROID NEEDS AN EXPLICIT BAR COLOUR. iOS draws Liquid Glass, which
+          follows the scheme on its own; Material has no such idea, and with no
+          `backgroundColor` it paints its LIGHT default under a dark app — a
+          white bar on #08090A, reported 2026-09-29. `bg.raised` is the card
+          surface in both schemes (white / #0F1011), so the bar reads as one
+          more card. iOS stays undefined so the glass is untouched.
+        */
+        backgroundColor={Platform.OS === 'android' ? theme.color.bg.raised : undefined}
+        rippleColor={theme.color.interactive.ghost.pressed}
         badgeBackgroundColor={theme.color.status.danger.solid}
         badgeTextColor={theme.color.status.danger.onSolid}
         minimizeBehavior={minimizeBehavior}
+        // Android's Material default hides every label but the selected one.
+        // With custom glyphs the label IS the meaning — a campus pillar or a
+        // three-bar mark is not self-explanatory — so every tab keeps its name.
+        labelVisibilityMode="labeled"
       >
         {tabs.map((tab) => (
           <NativeTabs.Trigger
@@ -85,6 +101,15 @@ export function AppTabs({ tabs, minimizeBehavior }: AppTabsProps) {
             */
             accessibilityLabel={tab.label}
             testID={`tab-${tab.name}`}
+            /*
+              The tab's NATIVE content container. Unset, it is the system's
+              light default, and for the frames before the incoming screen
+              paints, the iOS 26 glass bar samples THAT — a pale flash of the
+              bar on every tab switch in dark mode (trap 5, measured
+              2026-09-30: ~4 frames). Canvas here means the glass samples the
+              right colour from the first frame.
+            */
+            contentStyle={{ backgroundColor: nativeColor((c) => c.bg.canvas, theme.color) }}
             listeners={isActionTab(tab) ? { tabPress: () => tab.onAction?.() } : undefined}
           >
             {/*
@@ -196,6 +221,11 @@ const ICON_RASTER_COLOUR = 'white';
  * a white glyph on a white Liquid Glass bar. Say it outright.
  */
 function tabGlyph(tab: TabConfig): ReactElement {
+  // Bundled glyphs are synchronous `require`s, so they sidestep the async-icon
+  // label bug described above; template mode lets the bar tint them.
+  if (isImageTab(tab)) {
+    return <NativeTabs.Trigger.Icon src={tab.image} renderingMode={tab.renderingMode ?? 'template'} />;
+  }
   if (!isIonTab(tab)) return <NativeTabs.Trigger.Icon sf={tab.sf} md={tab.md} />;
 
   const { ion } = tab;

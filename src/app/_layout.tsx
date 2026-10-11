@@ -15,7 +15,7 @@ import { useUnistyles } from 'react-native-unistyles';
 import * as SystemUI from 'expo-system-ui';
 import * as SplashScreen from 'expo-splash-screen';
 import { QueryProvider } from '@/lib/query';
-import { useSession } from '@/lib/auth';
+import { useModelReady } from '@/lib/model';
 import { useSystemBarsStore } from '@/theme/system-bars';
 import { UpdateBanner } from '@/components/updates/update-banner';
 
@@ -31,7 +31,7 @@ SplashScreen.setOptions({ duration: 300, fade: true });
 
 function RootNavigator() {
   const { theme, rt } = useUnistyles();
-  const { isAuthenticated, isHydrated } = useSession();
+  const { hasModel, isHydrated } = useModelReady();
   const isDark = rt.themeName === 'dark';
   // `null` unless a focused screen is asking for different ink. See below.
   const systemBarsOverride = useSystemBarsStore((state) => state.override);
@@ -98,12 +98,15 @@ function RootNavigator() {
           Declarative guards. Flipping a guard is what drives navigation and
           wipes protected history — there is no router.replace anywhere in this
           codebase, and there should not be.
+
+          Lumen has no real auth; `hasModel` repurposes this structural split
+          as a first-run gate — see docs/app-plan.md "Guards".
         */}
-        <Stack.Protected guard={!isAuthenticated}>
-          <Stack.Screen name="(auth)/sign-in" />
+        <Stack.Protected guard={!hasModel}>
+          <Stack.Screen name="(onboarding)" />
         </Stack.Protected>
 
-        <Stack.Protected guard={isAuthenticated}>
+        <Stack.Protected guard={hasModel}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
       </Stack>
