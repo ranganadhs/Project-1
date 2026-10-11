@@ -165,18 +165,22 @@ describe('exhaustive token coverage', () => {
   });
 
   it('keeps the validated chart order intact', () => {
-    // These eight passed the CVD/contrast validator IN THIS ORDER. Re-ordering
-    // or substituting requires re-running it — pink next to teal collapses to
-    // deltaE 3.8 under deuteranopia.
+    // Lumen rebrand: `accent` was set equal to `brand` (both terracotta),
+    // which collapsed the old slot 1 (brand[500]) and slot 7 (accent[600])
+    // to one hue. Slot 7 was dropped rather than reusing the brand hue
+    // twice, and slot 1 moved to brand[600] to clear the documented ≥3:1
+    // floor against the new warm canvas (brand[500] was only 2.20:1 in
+    // light mode). See the REBRAND NOTE in palette.ts — this order was
+    // checked for contrast only, not re-run through a CVD/ΔE validator
+    // (this repo ships no such script), so treat it as provisional.
     expect(chartCategorical).toEqual([
-      '#3D6BFF',
+      '#B86F4C',
       '#0D9488',
       '#C2410C',
       '#7C3AED',
       '#DB2777',
       '#65A30D',
-      '#0891B2',
-      '#B45309',
+      '#6E440A',
     ]);
   });
 

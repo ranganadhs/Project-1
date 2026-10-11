@@ -26,53 +26,58 @@ export type Ramp = {
 
 // ── Neutral ────────────────────────────────────────────────────────────────
 // Carries every surface and every piece of text, so it has the most steps.
+// Warm tan/cream family — matches the Lumen pen.dev design system (bg #F3EBE2
+// family), not a cool gray.
 export const neutral: Ramp = {
-  50: '#F8FAFC',
-  100: '#F1F5F9',
-  200: '#E2E8F0',
-  300: '#CBD5E1',
-  400: '#94A3B8',
-  500: '#64748B',
-  600: '#475569',
-  700: '#334155',
-  800: '#1E293B',
-  850: '#141C2B',
-  900: '#0F172A',
-  950: '#0A0F1A',
+  50: '#FBF8F4',
+  100: '#F3EBE2',
+  200: '#EDE4D8',
+  300: '#E4DACD',
+  400: '#D8C9B8',
+  500: '#B3A594',
+  600: '#8A8578',
+  700: '#6B6558',
+  800: '#453F35',
+  850: '#2E2920',
+  900: '#1C1712',
+  950: '#120E0A',
 };
 
 // ── Brand ──────────────────────────────────────────────────────────────────
 // The identity hue. Change this ramp and the whole product re-skins.
+// Lumen's terracotta — source of truth is the pen.dev design (accent #D4916E).
 export const brand: Ramp = {
-  50: '#EFF4FF',
-  100: '#DBE6FF',
-  200: '#B8CCFF',
-  300: '#8DACFF',
-  400: '#5B86FF',
-  500: '#3D6BFF',
-  600: '#2C53E0',
-  700: '#1E3AC8',
-  800: '#16277A',
-  850: '#122065',
-  900: '#0F1B57',
-  950: '#0A1238',
+  50: '#FBF2EC',
+  100: '#F6E6DC',
+  200: '#EDCBB3',
+  300: '#E3AD88',
+  400: '#D99F79',
+  500: '#D4916E',
+  600: '#B86F4C',
+  700: '#95573A',
+  800: '#70412B',
+  850: '#5C3522',
+  900: '#482A1B',
+  950: '#2B160B',
 };
 
 // ── Accent ─────────────────────────────────────────────────────────────────
 // A secondary identity hue for highlights and emphasis. Never for status.
+// The pen.dev design uses a single identity hue for both brand and accent
+// roles, so this ramp mirrors `brand`.
 export const accent: Ramp = {
-  50: '#ECFEFF',
-  100: '#CFFAFE',
-  200: '#A5F3FC',
-  300: '#67E8F9',
-  400: '#22D3EE',
-  500: '#06B6D4',
-  600: '#0891B2',
-  700: '#0E7490',
-  800: '#155E75',
-  850: '#12505F',
-  900: '#164E63',
-  950: '#083344',
+  50: '#FBF2EC',
+  100: '#F6E6DC',
+  200: '#EDCBB3',
+  300: '#E3AD88',
+  400: '#D99F79',
+  500: '#D4916E',
+  600: '#B86F4C',
+  700: '#95573A',
+  800: '#70412B',
+  850: '#5C3522',
+  900: '#482A1B',
+  950: '#2B160B',
 };
 
 // ── Status ─────────────────────────────────────────────────────────────────
@@ -93,49 +98,52 @@ export const success: Ramp = {
   950: '#022C22',
 };
 
+// Anchored on the pen.dev warning token (#A3650F).
 export const warning: Ramp = {
-  50: '#FFFBEB',
-  100: '#FEF3C7',
-  200: '#FDE68A',
-  300: '#FCD34D',
-  400: '#FBBF24',
-  500: '#F59E0B',
-  600: '#D97706',
-  700: '#B45309',
-  800: '#92400E',
-  850: '#7C360C',
-  900: '#78350F',
-  950: '#451A03',
+  50: '#FBF0DE',
+  100: '#F6DFB8',
+  200: '#EEC587',
+  300: '#E3A65A',
+  400: '#D08C33',
+  500: '#A3650F',
+  600: '#8A550C',
+  700: '#6E440A',
+  800: '#523308',
+  850: '#402806',
+  900: '#2E2410',
+  950: '#1C1608',
 };
 
+// Anchored on the pen.dev error token (#A8372B).
 export const danger: Ramp = {
-  50: '#FEF2F2',
-  100: '#FEE2E2',
-  200: '#FECACA',
-  300: '#FCA5A5',
-  400: '#F87171',
-  500: '#EF4444',
-  600: '#DC2626',
-  700: '#B91C1C',
-  800: '#991B1B',
-  850: '#7F1717',
-  900: '#7F1D1D',
-  950: '#450A0A',
+  50: '#FBE8E5',
+  100: '#F6CFC8',
+  200: '#ECA397',
+  300: '#DF7768',
+  400: '#C9523F',
+  500: '#A8372B',
+  600: '#8B2C21',
+  700: '#6D2219',
+  800: '#501811',
+  850: '#3E120C',
+  900: '#2E1512',
+  950: '#1A0A08',
 };
 
+// Anchored on the pen.dev info token (#2C5AA3).
 export const info: Ramp = {
-  50: '#EFF6FF',
-  100: '#DBEAFE',
-  200: '#BFDBFE',
-  300: '#93C5FD',
-  400: '#60A5FA',
-  500: '#3B82F6',
-  600: '#2563EB',
-  700: '#1D4ED8',
-  800: '#1E40AF',
-  850: '#1A3894',
-  900: '#1E3A8A',
-  950: '#172554',
+  50: '#E8EFFB',
+  100: '#C9D9F2',
+  200: '#9FBCE6',
+  300: '#6F9AD8',
+  400: '#4A7BC4',
+  500: '#2C5AA3',
+  600: '#234A89',
+  700: '#1B3A6D',
+  800: '#142A4F',
+  850: '#10213E',
+  900: '#121E2E',
+  950: '#0A1220',
 };
 
 // ── Extended hues ──────────────────────────────────────────────────────────
@@ -228,16 +236,27 @@ export const absolute = {
  * The order is load-bearing. Teal sits at slot 2 rather than beside pink
  * because pink↔teal collapses to ΔE 3.8 under deuteranopia when adjacent.
  * Re-ordering or substituting a colour REQUIRES re-running the validator.
+ *
+ * REBRAND NOTE (Lumen terracotta): `accent` was set equal to `brand` for this
+ * rebrand (both terracotta), which collapsed the old slot 1 (brand[500]) and
+ * slot 7 (accent[600]) to one hue. Slot 7 is dropped rather than reusing the
+ * brand hue twice. Slot 1 moved to brand[600] (3.29:1 light / 4.59:1 dark —
+ * brand[500] only cleared 2.20:1 light). This repo keeps the ΔE/CVD
+ * methodology as a comment but ships no runnable validator script, so this
+ * edit was checked for the documented ≥3:1 floor only, against the new warm
+ * canvas (#F3EBE2 light / #1C1712 dark) — NOT re-validated for CVD separation
+ * between slots. orange/violet/warning read borderline (~3.1–3.4:1) against
+ * the new canvas on at least one scheme; re-run a real validator before this
+ * chart order ships in a release.
  */
 export const chartCategorical = [
-  brand[500], // 1  blue
+  brand[600], // 1  terracotta (brand)
   teal[600], // 2  teal
   orange[700], // 3  orange
   violet[600], // 4  violet
   pink[600], // 5  pink
   lime[600], // 6  lime
-  accent[600], // 7  cyan
-  warning[700], // 8  amber
+  warning[700], // 7  amber
 ] as const;
 
 /** Magnitude. One hue, light → dark. Never a rainbow. */
@@ -265,13 +284,12 @@ export const chartDiverging = {
  * avatar never reads as a state.
  */
 export const avatarPalette = [
-  brand[500],
+  brand[600],
   teal[600],
   orange[700],
   violet[600],
   pink[600],
   lime[600],
-  accent[600],
   info[600],
 ] as const;
 

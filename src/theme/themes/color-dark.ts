@@ -34,7 +34,7 @@ export const colorDark: ThemeColor = {
     inverse: absolute.white,
     brand: brand[400],
     brandSubtle: brand[950],
-    accent: accent[500],
+    accent: accent[400],
     accentSubtle: accent[950],
     selected: brand[950],
     disabled: neutral[800],
@@ -57,7 +57,7 @@ export const colorDark: ThemeColor = {
     // ── PAIRING TOKENS ─────────────────────────────────────────────────────
     // DARK text here, where light mode uses white. Not an inconsistency — the
     // proof is the contrast: on the dark theme's brand fill (brand[400]),
-    // white scores 3.33:1 and fails AA, while neutral[900] scores 5.35:1.
+    // white scores 2.29:1 and fails AA, while neutral[900] scores 7.78:1.
     //
     // A dark theme wants a LUMINOUS accent, and luminous fills take dark text.
     // This is why these tokens are bound to the background rather than being
@@ -95,9 +95,12 @@ export const colorDark: ThemeColor = {
       disabled: neutral[800],
     },
     secondary: {
-      rest: neutral[800],
-      hover: neutral[700],
-      pressed: neutral[600],
+      /** neutral[600] pressed with fg.primary text was only 3.48:1. The
+       * whole ladder shifts a step darker so pressed clears 4.5:1 at 700
+       * while rest/hover stay distinct. */
+      rest: neutral[850],
+      hover: neutral[800],
+      pressed: neutral[700],
       disabled: neutral[800],
     },
     ghost: {
@@ -107,9 +110,11 @@ export const colorDark: ThemeColor = {
       disabled: absolute.transparent,
     },
     danger: {
-      rest: danger[400],
-      hover: danger[300],
-      pressed: danger[200],
+      /** danger[400] with dark text (fg.onBrand) is only 4.03:1; 300 clears
+       * 5.91:1. Press still goes brighter per the dark-mode ladder. */
+      rest: danger[300],
+      hover: danger[200],
+      pressed: danger[100],
       disabled: neutral[800],
     },
   },
@@ -130,24 +135,30 @@ export const colorDark: ThemeColor = {
       onSolid: neutral[900],
     },
     danger: {
-      fg: danger[400],
+      /** danger[400] was only 4.37:1 on bg.950 and 4.03:1 on canvas; 300
+       * clears both (6.40 / 5.91). */
+      fg: danger[300],
       bg: danger[950],
       border: danger[800],
       solid: danger[500],
-      onSolid: neutral[900],
+      /** Dark text on danger[500] was only 2.75:1; white clears 6.47:1. */
+      onSolid: absolute.white,
     },
     info: {
-      fg: info[400],
+      /** info[400] was only 4.39:1 on bg.950; 300 clears 6.51:1. */
+      fg: info[300],
       bg: info[950],
       border: info[800],
       solid: info[500],
-      onSolid: neutral[900],
+      /** Dark text on info[500] was only 2.62:1; white clears 6.78:1. */
+      onSolid: absolute.white,
     },
     neutral: {
       fg: neutral[300],
       bg: neutral[800],
       border: neutral[700],
-      solid: neutral[600],
+      /** neutral[600] with neutral[50] text was only 3.48:1; 700 clears 5.47:1. */
+      solid: neutral[700],
       onSolid: neutral[50],
     },
   },

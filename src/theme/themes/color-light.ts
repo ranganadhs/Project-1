@@ -26,26 +26,26 @@ const { neutral, brand, accent, success, warning, danger, info } = palette;
 const colorLightSource = {
   // ── Backgrounds ──────────────────────────────────────────────────────────
   bg: {
-    /** The page itself. */
-    canvas: absolute.white,
+    /** The page itself. Matches the pen.dev design's warm cream canvas. */
+    canvas: neutral[100],
     /** A grouped region sitting on the canvas. */
-    surface: neutral[50],
+    surface: absolute.white,
     /** Cards and sheets that sit ABOVE the surface. */
     raised: absolute.white,
     /** Wells, tracks, and inset fields — reads as below the surface. */
-    sunken: neutral[100],
+    sunken: neutral[200],
     /** Opposite-scheme block, for tooltips and snackbars. */
     inverse: neutral[900],
-    /** Solid brand fill. */
-    brand: brand[600],
+    /** Solid brand fill. brand[600] alone is only 3.88:1 with white text. */
+    brand: brand[700],
     /** Tinted brand wash for selected rows and highlights. */
-    brandSubtle: brand[50],
+    brandSubtle: brand[100],
     accent: accent[700],
-    accentSubtle: accent[50],
+    accentSubtle: accent[100],
     /** Current selection in a list. */
-    selected: brand[50],
+    selected: brand[100],
     /** Filled but non-interactive. */
-    disabled: neutral[100],
+    disabled: neutral[200],
     /**
      * Backdrops. ALPHA, not solid: a scrim must darken whatever is behind it —
      * an image, a map, a video — which a solid hex cannot do.
@@ -71,12 +71,12 @@ const colorLightSource = {
     /** Body text and primary icons. */
     primary: neutral[900],
     /** Supporting text that must still be comfortably readable. */
-    secondary: neutral[600],
+    secondary: neutral[700],
     /** De-emphasised metadata. Passes AA for large text only. */
-    tertiary: neutral[500],
+    tertiary: neutral[600],
     disabled: neutral[400],
     /** Empty-field hint. Distinct from disabled — the field IS editable. */
-    placeholder: neutral[500],
+    placeholder: neutral[600],
     // ── PAIRING TOKENS ─────────────────────────────────────────────────────
     // These are bound to a BACKGROUND, not to the theme.
     //
@@ -100,9 +100,9 @@ const colorLightSource = {
     onAccent: absolute.white,
     /** On any status.<tone>.solid fill. */
     onSolid: absolute.white,
-    link: brand[600],
-    linkPressed: brand[700],
-    brand: brand[600],
+    link: brand[700],
+    linkPressed: brand[800],
+    brand: brand[700],
     accent: accent[700],
   },
 
@@ -112,12 +112,13 @@ const colorLightSource = {
     subtle: neutral[200],
     /** Default container edge. */
     default: neutral[300],
-    /** Delineates a control. Held to 3:1 (WCAG 1.4.11). */
-    strong: neutral[500],
-    /** Focus ring. Held to 3:1. */
-    focus: brand[500],
-    brand: brand[500],
-    selected: brand[500],
+    /** Delineates a control. Held to 3:1 (WCAG 1.4.11); neutral[500]/[600]
+     * fall short on both canvas and surface, so this uses neutral[700]. */
+    strong: neutral[700],
+    /** Focus ring. Held to 3:1; brand[500]/[600] fall short on raised. */
+    focus: brand[700],
+    brand: brand[700],
+    selected: brand[700],
     inverse: neutral[700],
     disabled: neutral[200],
   },
@@ -132,23 +133,24 @@ const colorLightSource = {
    */
   interactive: {
     // Light mode: press goes DARKER. Each step must keep white legible, so
-    // the ladder is 600 -> 700 -> 800, not 600 -> 500.
+    // the ladder is 700 -> 800 -> 850 — brand[600] alone is only 3.88:1 with
+    // white and fails AA for body-sized button labels.
     primary: {
-      rest: brand[600],
-      hover: brand[700],
-      pressed: brand[800],
-      disabled: neutral[200],
+      rest: brand[700],
+      hover: brand[800],
+      pressed: brand[850],
+      disabled: neutral[300],
     },
     secondary: {
-      rest: neutral[100],
-      hover: neutral[200],
-      pressed: neutral[300],
-      disabled: neutral[100],
+      rest: neutral[200],
+      hover: neutral[300],
+      pressed: neutral[400],
+      disabled: neutral[200],
     },
     ghost: {
       rest: absolute.transparent,
-      hover: neutral[100],
-      pressed: neutral[200],
+      hover: neutral[200],
+      pressed: neutral[300],
       disabled: absolute.transparent,
     },
     danger: {
@@ -180,7 +182,8 @@ const colorLightSource = {
       bg: warning[50],
       border: warning[200],
       solid: warning[500],
-      onSolid: neutral[900],
+      /** Dark text on warning[500] is only 3.75:1; white clears 4.75:1. */
+      onSolid: absolute.white,
     },
     danger: {
       fg: danger[700],
@@ -197,10 +200,12 @@ const colorLightSource = {
       onSolid: absolute.white,
     },
     neutral: {
-      fg: neutral[600],
+      /** neutral[600] on neutral[100] is only 3.12:1; 700 clears 4.90:1. */
+      fg: neutral[700],
       bg: neutral[100],
       border: neutral[200],
-      solid: neutral[600],
+      /** neutral[600] solid with white text is only 3.68:1; 700 clears 5.79:1. */
+      solid: neutral[700],
       onSolid: absolute.white,
     },
   },
@@ -218,7 +223,8 @@ const colorLightSource = {
     /** Gridlines must recede behind the data. */
     grid: neutral[200],
     axis: neutral[300],
-    label: neutral[600],
+    /** neutral[600] on canvas is only 3.12:1; 700 clears 4.90:1. */
+    label: neutral[700],
   },
 
   /** Deterministic avatar backgrounds — hash a stable id into this array. */
