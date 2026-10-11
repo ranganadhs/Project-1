@@ -13,17 +13,22 @@ import type { ModelId } from './types';
  * `src/lib/auth` — model readiness and account auth are different concerns
  * that happen to both gate navigation in this app.
  *
- * ── ACTIVE VS. DOWNLOADING ─────────────────────────────────────────────────
+ * ── ACTIVE VS. DOWNLOADED VS. DOWNLOADING ─────────────────────────────────
  * `activeModelId` is the model actually usable for inference right now.
- * `downloadingModelId` is a SEPARATE in-flight download — switching models
- * from Settings must not drop the student back to onboarding or interrupt
- * the model they can still use; the swap to `activeModelId` only happens once
- * the new download finishes. Model Setup (first run, no active model yet) is
- * just the case where `activeModelId` is null.
+ * `downloadedModelIds` is every model whose download has ever completed —
+ * switching to one of THOSE is instant, no re-download. `downloadingModelId`
+ * is a SEPARATE in-flight download for a model not yet in that list —
+ * switching models from Settings must not drop the student back to
+ * onboarding or interrupt the model they can still use; the swap to
+ * `activeModelId` only happens once the new download finishes. Model Setup
+ * (first run, no active model yet) is just the case where `activeModelId` is
+ * null.
  */
 type ModelState = {
   /** The model currently ready for inference, or null before the first download. */
   activeModelId: ModelId | null;
+  /** Every model whose download has completed — switching among these needs no re-download. */
+  downloadedModelIds: ModelId[];
   /** True once a model has finished downloading and is ready for inference. */
   hasModel: boolean;
   isHydrated: boolean;
@@ -36,6 +41,8 @@ type ModelState = {
   setDownloadProgress: (progress: number) => void;
   /** Called when the on-device model fetch pipeline reports completion. */
   markDownloadComplete: () => void;
+  /** Switches to an already-downloaded model instantly — no download involved. */
+  setActiveModel: (id: ModelId) => void;
   /** Lets Model Setup/Settings cancel an in-flight download without switching. */
   cancelDownload: () => void;
   /** Drops back to no active model — only for a genuine "start over", not a switch. */
@@ -46,6 +53,7 @@ export const useModelStore = create<ModelState>()(
   persist(
     (set) => ({
       activeModelId: null,
+      downloadedModelIds: [],
       hasModel: false,
       isHydrated: false,
       downloadingModelId: null,
@@ -58,15 +66,26 @@ export const useModelStore = create<ModelState>()(
       markDownloadComplete: () =>
         set((state) => ({
           activeModelId: state.downloadingModelId ?? state.activeModelId,
+          downloadedModelIds: state.downloadingModelId
+            ? [...new Set([...state.downloadedModelIds, state.downloadingModelId])]
+            : state.downloadedModelIds,
           hasModel: true,
           downloadingModelId: null,
           downloadProgress: 0,
         })),
 
+      setActiveModel: (id) => set({ activeModelId: id }),
+
       cancelDownload: () => set({ downloadingModelId: null, downloadProgress: 0 }),
 
       reset: () =>
-        set({ activeModelId: null, hasModel: false, downloadingModelId: null, downloadProgress: 0 }),
+        set({
+          activeModelId: null,
+          downloadedModelIds: [],
+          hasModel: false,
+          downloadingModelId: null,
+          downloadProgress: 0,
+        }),
     }),
     {
       name: 'model',
@@ -76,6 +95,7 @@ export const useModelStore = create<ModelState>()(
       // (same reasoning as session-store).
       partialize: (state) => ({
         activeModelId: state.activeModelId,
+        downloadedModelIds: state.downloadedModelIds,
         hasModel: state.hasModel,
       }),
     },

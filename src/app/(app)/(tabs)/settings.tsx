@@ -1,6 +1,5 @@
-import { Alert, Platform, View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { StyleSheet } from 'react-native-unistyles';
-import { router } from 'expo-router';
 import {
   Badge,
   Card,
@@ -17,7 +16,6 @@ import {
 import { SectionHeader } from '@/features/shared/section-header';
 import { MODELS, useDummyDownload, useModelStore, type ModelId } from '@/lib/model';
 import { useThemeMode, type ThemeMode } from '@/theme/theme-mode';
-import { describeBuild } from '@/components/updates/build-info';
 
 const THEME_MODES: readonly { value: ThemeMode; label: string }[] = [
   { value: 'system', label: 'System' },
@@ -28,22 +26,26 @@ const THEME_MODES: readonly { value: ThemeMode; label: string }[] = [
 export default function Settings() {
   const { mode, setMode, resolved } = useThemeMode();
   const activeModelId = useModelStore((s) => s.activeModelId);
+  const downloadedModelIds = useModelStore((s) => s.downloadedModelIds);
   const downloadingModelId = useModelStore((s) => s.downloadingModelId);
   const downloadProgress = useModelStore((s) => s.downloadProgress);
+  const setActiveModel = useModelStore((s) => s.setActiveModel);
   const { begin } = useDummyDownload();
-  // Version identifies the BINARY; Bundle the JS an OTA update may have replaced.
-  const { version, bundle } = describeBuild();
-
-  const about: [string, string][] = [
-    ['Version', version],
-    ['Bundle', bundle],
-    ['Platform', `${Platform.OS === 'ios' ? 'iOS' : 'Android'} ${String(Platform.Version)}`],
-  ];
 
   const confirmSwitchModel = (model: ModelId) => {
     if (downloadingModelId) return; // one download in flight at a time
+    const name = MODELS.find((m) => m.id === model)?.name;
+
+    if (downloadedModelIds.includes(model)) {
+      Alert.alert(`Switch to ${name}?`, 'Already on this device — switching takes effect right away.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Switch', onPress: () => setActiveModel(model) },
+      ]);
+      return;
+    }
+
     Alert.alert(
-      `Switch to ${MODELS.find((m) => m.id === model)?.name}?`,
+      `Switch to ${name}?`,
       'It downloads in the background here — your current model keeps working until it is ready.',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -90,6 +92,7 @@ export default function Settings() {
             {MODELS.map((model, i) => {
               const active = model.id === activeModelId;
               const downloading = model.id === downloadingModelId;
+              const downloaded = downloadedModelIds.includes(model.id);
               return (
                 <View key={model.id}>
                   {i > 0 ? <Divider inset /> : null}
@@ -104,6 +107,14 @@ export default function Settings() {
                         <Text variant="label" weight="medium" tone="secondary" numeric>
                           {Math.round(downloadProgress * 100)}%
                         </Text>
+                      ) : downloaded ? (
+                        <IconTile
+                          icon="checkmark-circle-outline"
+                          sf="checkmark.circle"
+                          md="check_circle"
+                          size="sm"
+                          tone="neutral"
+                        />
                       ) : (
                         <IconTile
                           icon="cloud-download-outline"
@@ -137,34 +148,6 @@ export default function Settings() {
               title="All data stays on this device"
               leading={<IconTile icon="shield-checkmark-outline" sf="checkmark.shield" md="verified_user" size="sm" />}
             />
-            <Divider inset />
-            <ListItem
-              title="Permissions"
-              subtitle="Notifications, camera, photos"
-              leading={<IconTile icon="lock-closed-outline" sf="lock" md="lock" size="sm" />}
-              onPress={() => router.push('/permissions')}
-            />
-          </Card>
-        </VStack>
-      </FadeIn>
-
-      <FadeIn index={4}>
-        <VStack gap={2}>
-          <SectionHeader title="About" />
-          <Card inset={false}>
-            {about.map(([k, v], i) => (
-              <View key={k}>
-                {i > 0 ? <Divider inset /> : null}
-                <ListItem
-                  title={k}
-                  trailing={
-                    <Text variant="label" weight="medium" tone="secondary">
-                      {v}
-                    </Text>
-                  }
-                />
-              </View>
-            ))}
           </Card>
         </VStack>
       </FadeIn>

@@ -31,16 +31,6 @@ export default function AppLayout() {
     >
       <Stack.Screen name="(tabs)" />
 
-      {/* Pushed from Settings — see src/lib/permissions. */}
-      <Stack.Screen
-        name="permissions"
-        options={{
-          headerShown: true,
-          title: 'Permissions',
-          headerBackButtonDisplayMode: 'minimal',
-        }}
-      />
-
       {/* PUSH — chat opens from the Learn tab's ask bar or a session row. */}
       <Stack.Screen
         name="session/[id]/index"

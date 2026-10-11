@@ -19,8 +19,8 @@ const TABS: TabConfig[] = [
   {
     name: 'quizzes',
     label: 'Quizzes',
-    sf: { default: 'questionmark.circle', selected: 'questionmark.circle.fill' },
-    md: 'quiz',
+    sf: { default: 'pencil.and.list.clipboard', selected: 'pencil.and.list.clipboard' },
+    md: 'edit_note',
   },
   {
     name: 'settings',
